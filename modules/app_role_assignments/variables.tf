@@ -2,10 +2,6 @@ variable "role_id" {
   type = string
 }
 
-variable "app_object_id" {
-  type = string
-}
-
 variable "user_object_ids" {
   type = list(string)
 }

@@ -131,11 +131,11 @@ resource "azuread_service_principal_token_signing_certificate" "token_cert" {
 }
 
 resource "random_uuid" "app_role_uuid" {
-  for_each = { for idx, role in var.app_roles : idx => role }
+  for_each = { for role in var.app_roles : role.display_name => role }
 }
 
 resource "azuread_application_app_role" "this" {
-  for_each = { for idx, role in var.app_roles : idx => role }
+  for_each = { for role in var.app_roles : role.display_name => role }
 
   application_id = azuread_application.this.id
   role_id        = random_uuid.app_role_uuid[each.key].id
@@ -175,9 +175,8 @@ module "app_role_assignments" {
   source   = "../app_role_assignments"
   for_each = { for roles in var.app_role_assignments : roles.role => roles }
 
-  current_app_id   = try(each.value.assign_application, false) == true ? azuread_service_principal.this[0].object_id : null
+  current_app_id   = azuread_service_principal.this[0].object_id
   group_object_ids = try(data.azuread_groups.app_groups[each.key].object_ids, [])
   user_object_ids  = try(data.azuread_users.app_users[each.key].object_ids, [])
-  role_id          = data.azuread_service_principal.app_roles[each.key].app_role_ids[each.key]
-  app_object_id    = data.azuread_service_principal.app_roles[each.key].object_id
+  role_id          = azuread_application_app_role.this[each.key].role_id
 }

@@ -30,21 +30,6 @@ data "azuread_application" "known_apps" {
   display_name = each.key
 }
 
-data "azuread_application" "internal_apps" {
-  for_each     = { for apps in var.app_role_assignments : apps.role => apps if startswith(apps.app_name, "SP-") }
-  display_name = each.value.app_name
-}
-
-data "azuread_service_principal" "app_roles" {
-  for_each = { for apps in var.app_role_assignments : apps.role => apps }
-
-  client_id = startswith(each.value.app_name, "SP-") ? (
-    data.azuread_application.internal_apps[each.key].client_id
-    ) : (
-    data.azuread_application_published_app_ids.well_known.result[each.key]
-  )
-}
-
 data "azuread_groups" "app_groups" {
   for_each      = { for grps in var.app_role_assignments : grps.role => grps if length(grps.group_names) > 0 }
   display_names = each.value.group_names

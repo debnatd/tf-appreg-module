@@ -119,10 +119,8 @@ variable "sso" {
 
 variable "app_role_assignments" {
   type = list(object({
-    app_name           = optional(string)
     user_names         = optional(list(string), [])
     group_names        = optional(list(string), [])
     role               = optional(string)
-    assign_application = optional(bool, false)
   }))
 }

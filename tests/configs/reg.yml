@@ -2,7 +2,8 @@ apps:
 - name: SPN-Test-1
   owners:
   - debarghyadebnath.d11_gmail.com#EXT#@debarghyadebnathd11gmail.onmicrosoft.com
-  application_id_urs:
+  - SPN-T1
+  application_id_uris:
   - "https://debarghyadebnathd11gmail.onmicrosoft.com/SPN-Test-1"
   web:
     homepage_url: "http://app.test1.com"
@@ -29,3 +30,14 @@ apps:
       user_consent_display_name: "Access SPN-Test-1"
       type: User
       value: "user_impersonation"
+  sso:
+    type: saml
+    basic_saml_config:
+      sign_on_url: "http://app.test1.com/signon"
+    saml_certificates:
+      notification_email_addresses:
+      - debarghyadebnath.d11@gmail.com
+  app_role_assignments:
+  - user_names:
+    - debarghyadebnath.d11_gmail.com#EXT#@debarghyadebnathd11gmail.onmicrosoft.com
+    role: AppRole1
