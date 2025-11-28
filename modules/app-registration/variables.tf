@@ -103,24 +103,25 @@ variable "sso" {
     }), {})
     attributes_and_claims = optional(object({
       include_basic_claim_set = optional(bool, true)
-      group_claims = optional(list(object({
-        group_type        = optional(string)
-        soutrce_attribute = optional(string)
-        name              = optional(string)
-        filter_groups = optional(object({
-          attribute_to_match = optional(string)
-          match_with         = optional(string)
-          string             = optional(string)
-        }))
-      })), [])
+      group_claim = optional(object({
+        type             = optional(string)
+        source_attribute = optional(string, "GroupID")
+        cloud_only_group = optional(bool, false)
+        # name              = optional(string)
+        # filter_groups = optional(object({
+        #   attribute_to_match = optional(string)
+        #   match_with         = optional(string)
+        #   string             = optional(string)
+        # }))
+      }), {})
     }), {})
   })
 }
 
 variable "app_role_assignments" {
   type = list(object({
-    user_names         = optional(list(string), [])
-    group_names        = optional(list(string), [])
-    role               = optional(string)
+    user_names  = optional(list(string), [])
+    group_names = optional(list(string), [])
+    role        = optional(string)
   }))
 }

@@ -8,7 +8,9 @@ resource "azuread_application" "this" {
   sign_in_audience = "AzureADMyOrg"
 
   prevent_duplicate_names = true
-  #group_membership_claims = 
+  group_membership_claims = var.sso.attributes_and_claims.group_claim.type != null ? [
+    var.sso.attributes_and_claims.group_claim.type
+  ] : []
 
   dynamic "web" {
     for_each = var.web != {} ? [var.web] : []
@@ -45,6 +47,41 @@ resource "azuread_application" "this" {
       known_client_applications      = local.known_app_client_ids
     }
   }
+
+  dynamic "optional_claims" {
+    for_each = var.sso.attributes_and_claims.group_claim != {} ? [var.sso.attributes_and_claims.group_claim] : []
+    content {
+      saml2_token {
+        additional_properties = concat(lower(optional_claims.value.source_attribute) == "groupid" ? [] : (
+          lower(optional_claims.value.source_attribute) == "samaccountname" ? [
+            "sam_account_name"
+            ] : (
+            lower(optional_claims.value.source_attribute) == "onpremisessecurityidentifier" ? [
+              "on_premise_security_identifier"
+              ] : (
+              lower(optional_claims.value.source_attribute) == "netbiosdomain\\samaccountname" ? [
+                "netbios_domain_and_sam_account_name"
+                ] : (
+                lower(optional_claims.value.source_attribute) == "dnsdomain\\samaccountname" ? [
+                  "dns_domain_and_sam_account_name"
+                  ] : (
+                  lower(optional_claims.value.source_attribute) == "cloudonlygroupdisplaynames" ? [
+                    "cloud_displayname"
+                  ] : []
+                )
+              )
+            )
+          )
+        ),
+        optional_claims.value.cloud_only_group == true ? [
+          "cloud_displayname"
+        ] : []
+        )
+        name = "groups"
+      }
+    }
+  }
+  # "NetBIOSDomain\\sAMAccountName", "DNSDomain\\sAMAccountName", "CloudOnlyGroupDisplayNames", "OnPremisesSecurityIdentifier"
 
   feature_tags {
     custom_single_sign_on = try(var.sso.type, "") == "saml" ? true : false
@@ -180,3 +217,15 @@ module "app_role_assignments" {
   user_object_ids  = try(data.azuread_users.app_users[each.key].object_ids, [])
   role_id          = azuread_application_app_role.this[each.key].role_id
 }
+
+# resource "azuread_claims_mapping_policy" "claims" {
+#   #count = length(var.sso.attributes_and_claims)
+#   definition = [  ]
+#   display_name = "${var.display_name}-claims-mapping-policy"
+# }
+
+# resource "azuread_service_principal_claims_mapping_policy_assignment" "claims_assignment" {
+#   #count = length(var.sso.attributes_and_claims)
+#   service_principal_id = azuread_service_principal.this[0].id
+#   claims_mapping_policy_id = azuread_claims_mapping_policy.claims.id
+# }
