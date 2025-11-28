@@ -91,7 +91,7 @@ variable "expose_api" {
 
 variable "sso" {
   type = object({
-    type = optional(string, "saml")
+    type = optional(string)
     basic_saml_config = optional(object({
       relay_state = optional(string)
       sign_on_url = optional(string)

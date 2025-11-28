@@ -3,7 +3,7 @@ module "app_registration" {
   for_each = { for reg in local.regs : reg.name => reg }
 
   display_name                  = each.value.name
-  identifier_uris               = try(each.value, application_id_uris, [])
+  identifier_uris               = try(each.value.application_id_uris, [])
   owners                        = try(each.value.owners, [])
   web                           = try(each.value.web, {})
   single_page_app_redirect_uris = try(each.value.single_page_application.redirect_uris, [])

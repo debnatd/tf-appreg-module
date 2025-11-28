@@ -70,7 +70,7 @@ resource "azuread_application_identifier_uri" "this" {
 }
 
 resource "azuread_application_api_access" "this" {
-  for_each = lcoal.api_by_name
+  for_each = local.api_by_name
 
   application_id = azuread_application.this.id
   api_client_id = startswith(each.key, "SP-") ? (
@@ -119,11 +119,12 @@ resource "azuread_service_principal" "this" {
 }
 
 resource "time_rotating" "saml_cert_rotation" {
+  count           = try(var.spn.create_spn, true) && try(var.sso.type, "") == "saml" ? 1 : 0
   rotation_months = (try(var.sso.saml_certificates.validity_in_years, 3) * 12) - 1
 }
 
 resource "azuread_service_principal_token_signing_certificate" "token_cert" {
-  count                = try(var.spn.create_spn, true) ? 1 : 0
+  count                = try(var.spn.create_spn, true) && try(var.sso.type, "") == "saml" ? 1 : 0
   service_principal_id = azuread_service_principal.this[0].id
   display_name         = "CN=${var.sso.saml_certificates.name != null ? var.sso.saml_certificates.name : "Microsoft Azure Federated SSO Certificate"}"
   end_date             = local.signing_certificate_end_date

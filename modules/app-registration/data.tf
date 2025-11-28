@@ -21,12 +21,12 @@ data "azuread_service_principal" "api" {
   client_id = startswith(each.key, "SP-") ? (
     data.azuread_application.asthete_apps[each.key].client_id
     ) : (
-    data.azuread_application_published_app_ids.well_known.result[each.value]
+    data.azuread_application_published_app_ids.well_known.result[each.key]
   )
 }
 
 data "azuread_application" "known_apps" {
-  for_each     = toset(var.expose_api.known_applications)
+  for_each     = toset(var.expose_api.known_client_applications)
   display_name = each.key
 }
 

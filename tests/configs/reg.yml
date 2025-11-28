@@ -1,0 +1,31 @@
+apps:
+- name: SPN-Test-1
+  owners:
+  - debarghyadebnath.d11_gmail.com#EXT#@debarghyadebnathd11gmail.onmicrosoft.com
+  application_id_urs:
+  - "https://debarghyadebnathd11gmail.onmicrosoft.com/SPN-Test-1"
+  web:
+    homepage_url: "http://app.test1.com"
+    logout_url: "http://app.test1.com/logout"
+    redirect_uris:
+    - "http://app.test1.com/account"
+  puiblic_client:
+    redirect_uris:
+    - "http://app.test1.com/redirect"
+  api_permissions:
+  - name: MicrosoftGraph
+    type: Application
+    permission: Group.Read.All
+  app_roles:
+  - display_name: "AppRole1"
+    description: "This is App Role 1"
+    allowed_member_types: Both
+    value: admin
+  expose_api:
+    scopes:
+    - admin_consent_description: "Allow the application to access SPN-Test-1 on behalf of the signed"
+      admin_consent_display_name: "Access SPN-Test-1"
+      user_consent_description: "Allow the application to access SPN-Test-1 on your behalf"
+      user_consent_display_name: "Access SPN-Test-1"
+      type: User
+      value: "user_impersonation"
