@@ -48,7 +48,7 @@ resource "azuread_application" "this" {
 
   feature_tags {
     custom_single_sign_on = try(var.sso.type, "") == "saml" ? true : false
-    enterprise            = length(var.app_role_assignments) > 0 ? true : false
+    enterprise            = length(var.app_role_assignments) > 0 || try(var.sso.type, "") == "saml" ? true : false
   }
 
   lifecycle {
@@ -114,7 +114,7 @@ resource "azuread_service_principal" "this" {
 
   feature_tags {
     custom_single_sign_on = try(var.sso.type, "") == "saml" ? true : false
-    enterprise            = length(var.app_role_assignments) > 0 ? true : false
+    enterprise            = length(var.app_role_assignments) > 0 || try(var.sso.type, "") == "saml" ? true : false
   }
 }
 
