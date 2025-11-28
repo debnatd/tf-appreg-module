@@ -1,11 +1,11 @@
 variable "dir" {
-  type = string
+  type     = string
   nullable = false
-  default = "./tests/configs"
+  default  = "./tests/configs"
 }
 
 variable "file_name" {
-  type = string
+  type     = string
   nullable = false
-  default = "reg.yml"
+  default  = "reg.yml"
 }
