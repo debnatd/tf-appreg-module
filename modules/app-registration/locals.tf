@@ -26,4 +26,6 @@ locals {
     time_rotating.saml_cert_rotation[0].rfc3339,
     "${try(var.sso.saml_certificates.validity_in_years, 3) * 8760}h"
   ) : null
+
+  sso_group_claim = var.sso.attributes_and_claims.group_claim
 }
