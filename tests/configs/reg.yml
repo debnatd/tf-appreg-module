@@ -3,6 +3,9 @@ apps:
   owners:
   - debarghyadebnath.d11_gmail.com#EXT#@debarghyadebnathd11gmail.onmicrosoft.com
   - SPN-T1
+  create_spn: true
+  app_role_assignment_required: true
+  notes: "This is a test application for SPN-Test-1"
   application_id_uris:
   - "https://debarghyadebnathd11gmail.onmicrosoft.com/SPN-Test-1"
   web:
@@ -37,17 +40,17 @@ apps:
     saml_certificates:
       notification_email_addresses:
       - debarghyadebnath.d11@gmail.com
-    attributes_and_claims:
-      include_basic_claim_set: true
-      group_claim:
-        type: ApplicationGroup
-        source_attribute: NetBIOSDomain\sAMAccountName
-        cloud_only_group: true
-        # name: 
-        # filter_groups:
-        #   attribute_to_match:
-        #   match_with:
-        #   string:
+    # attributes_and_claims:
+    #   include_basic_claim_set: true
+    #   group_claim:
+    #     type: ApplicationGroup
+    #     source_attribute: NetBIOSDomain\sAMAccountName
+    #     cloud_only_group: true
+    #     # name: 
+    #     # filter_groups:
+    #     #   attribute_to_match:
+    #     #   match_with:
+    #     #   string:
   app_role_assignments:
   - user_names:
     - debarghyadebnath.d11_gmail.com#EXT#@debarghyadebnathd11gmail.onmicrosoft.com

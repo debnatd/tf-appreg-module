@@ -48,39 +48,39 @@ resource "azuread_application" "this" {
     }
   }
 
-  # dynamic "optional_claims" {
-  #   for_each = var.sso.attributes_and_claims.group_claim != {} ? [var.sso.attributes_and_claims.group_claim] : []
-  #   content {
-  #     saml2_token {
-  #       additional_properties = concat(lower(optional_claims.value.source_attribute) == "groupid" ? [] : (
-  #         lower(optional_claims.value.source_attribute) == "samaccountname" ? [
-  #           "sam_account_name"
-  #           ] : (
-  #           lower(optional_claims.value.source_attribute) == "onpremisessecurityidentifier" ? [
-  #             "on_premise_security_identifier"
-  #             ] : (
-  #             lower(optional_claims.value.source_attribute) == "netbiosdomain\\samaccountname" ? [
-  #               "netbios_domain_and_sam_account_name"
-  #               ] : (
-  #               lower(optional_claims.value.source_attribute) == "dnsdomain\\samaccountname" ? [
-  #                 "dns_domain_and_sam_account_name"
-  #                 ] : (
-  #                 lower(optional_claims.value.source_attribute) == "cloudonlygroupdisplaynames" ? [
-  #                   "cloud_displayname"
-  #                 ] : []
-  #               )
-  #             )
-  #           )
-  #         )
-  #       ),
-  #       optional_claims.value.cloud_only_group == true ? [
-  #         "cloud_displayname"
-  #       ] : []
-  #       )
-  #       name = "groups"
-  #     }
-  #   }
-  # }
+  dynamic "optional_claims" {
+    for_each = var.sso.attributes_and_claims.group_claim != {} ? [var.sso.attributes_and_claims.group_claim] : []
+    content {
+      saml2_token {
+        additional_properties = concat(lower(optional_claims.value.source_attribute) == "groupid" ? [] : (
+          lower(optional_claims.value.source_attribute) == "samaccountname" ? [
+            "sam_account_name"
+            ] : (
+            lower(optional_claims.value.source_attribute) == "onpremisessecurityidentifier" ? [
+              "on_premise_security_identifier"
+              ] : (
+              lower(optional_claims.value.source_attribute) == "netbiosdomain\\samaccountname" ? [
+                "netbios_domain_and_sam_account_name"
+                ] : (
+                lower(optional_claims.value.source_attribute) == "dnsdomain\\samaccountname" ? [
+                  "dns_domain_and_sam_account_name"
+                  ] : (
+                  lower(optional_claims.value.source_attribute) == "cloudonlygroupdisplaynames" ? [
+                    "cloud_displayname"
+                  ] : []
+                )
+              )
+            )
+          )
+        ),
+        optional_claims.value.cloud_only_group == true ? [
+          "cloud_displayname"
+        ] : []
+        )
+        name = "groups"
+      }
+    }
+  }
   # # "NetBIOSDomain\\sAMAccountName", "DNSDomain\\sAMAccountName", "CloudOnlyGroupDisplayNames", "OnPremisesSecurityIdentifier"
 
   feature_tags {
@@ -95,7 +95,7 @@ resource "azuread_application" "this" {
       required_resource_access,
       api[0].oauth2_permission_scope,
       tags,
-      optional_claims
+      #optional_claims
     ]
   }
 }
@@ -131,10 +131,15 @@ resource "azuread_application_api_access" "this" {
 }
 
 resource "azuread_service_principal" "this" {
-  count = try(var.spn.create_spn, true) ? 1 : 0
+  count = try(var.create_spn, true) ? 1 : 0
 
   client_id                    = azuread_application.this.client_id
-  app_role_assignment_required = try(var.spn.app_role_assignment_required, false)
+  app_role_assignment_required = var.app_role_assignment_required
+
+  # Portal property: 'Enabled for users to sign-in?'
+  account_enabled = true
+  notes           = var.notes
+
   owners = concat(
     [data.azuread_client_config.current.object_id],
     data.azuread_users.users.object_ids,
@@ -157,12 +162,12 @@ resource "azuread_service_principal" "this" {
 }
 
 resource "time_rotating" "saml_cert_rotation" {
-  count           = try(var.spn.create_spn, true) && try(var.sso.type, "") == "saml" ? 1 : 0
+  count           = try(var.create_spn, true) && try(var.sso.type, "") == "saml" ? 1 : 0
   rotation_months = (try(var.sso.saml_certificates.validity_in_years, 3) * 12) - 1
 }
 
 resource "azuread_service_principal_token_signing_certificate" "token_cert" {
-  count                = try(var.spn.create_spn, true) && try(var.sso.type, "") == "saml" ? 1 : 0
+  count                = try(var.create_spn, true) && try(var.sso.type, "") == "saml" ? 1 : 0
   service_principal_id = azuread_service_principal.this[0].id
   display_name         = "CN=${var.sso.saml_certificates.name != null ? var.sso.saml_certificates.name : "Microsoft Azure Federated SSO Certificate"}"
   end_date             = local.signing_certificate_end_date
@@ -251,37 +256,37 @@ module "app_role_assignments" {
 #   display_name = "test_transformation"
 # }
 
-resource "azuread_application_optional_claims" "this" {
-  count          = local.sso_group_claim.type != null ? 1 : 0
-  application_id = azuread_application.this.id
+# resource "azuread_application_optional_claims" "this" {
+#   count          = local.sso_group_claim.type != null ? 1 : 0
+#   application_id = azuread_application.this.id
 
-  saml2_token {
-    additional_properties = concat(lower(local.sso_group_claim.source_attribute) == "groupid" ? [] : (
-      lower(local.sso_group_claim.source_attribute) == "samaccountname" ? [
-        "sam_account_name"
-        ] : (
-        lower(local.sso_group_claim.source_attribute) == "onpremisessecurityidentifier" ? [
-          "on_premise_security_identifier"
-          ] : (
-          lower(local.sso_group_claim.source_attribute) == "netbiosdomain\\samaccountname" ? [
-            "netbios_domain_and_sam_account_name"
-            ] : (
-            lower(local.sso_group_claim.source_attribute) == "dnsdomain\\samaccountname" ? [
-              "dns_domain_and_sam_account_name"
-              ] : (
-              lower(local.sso_group_claim.source_attribute) == "cloudonlygroupdisplaynames" ? [
-                "cloud_displayname"
-              ] : []
-            )
-          )
-        )
-      )
-      ),
-      local.sso_group_claim.cloud_only_group == true ? [
-        "cloud_displayname"
-      ] : []
-    )
-    name = "groups"
-  }
-  # "NetBIOSDomain\\sAMAccountName", "DNSDomain\\sAMAccountName", "CloudOnlyGroupDisplayNames", "OnPremisesSecurityIdentifier"
-}
+#   saml2_token {
+#     additional_properties = concat(lower(local.sso_group_claim.source_attribute) == "groupid" ? [] : (
+#       lower(local.sso_group_claim.source_attribute) == "samaccountname" ? [
+#         "sam_account_name"
+#         ] : (
+#         lower(local.sso_group_claim.source_attribute) == "onpremisessecurityidentifier" ? [
+#           "on_premise_security_identifier"
+#           ] : (
+#           lower(local.sso_group_claim.source_attribute) == "netbiosdomain\\samaccountname" ? [
+#             "netbios_domain_and_sam_account_name"
+#             ] : (
+#             lower(local.sso_group_claim.source_attribute) == "dnsdomain\\samaccountname" ? [
+#               "dns_domain_and_sam_account_name"
+#               ] : (
+#               lower(local.sso_group_claim.source_attribute) == "cloudonlygroupdisplaynames" ? [
+#                 "cloud_displayname"
+#               ] : []
+#             )
+#           )
+#         )
+#       )
+#       ),
+#       local.sso_group_claim.cloud_only_group == true ? [
+#         "cloud_displayname"
+#       ] : []
+#     )
+#     name = "groups"
+#   }
+#   # "NetBIOSDomain\\sAMAccountName", "DNSDomain\\sAMAccountName", "CloudOnlyGroupDisplayNames", "OnPremisesSecurityIdentifier"
+# }

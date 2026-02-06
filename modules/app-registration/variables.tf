@@ -26,15 +26,18 @@ variable "public_client_redirect_uris" {
   type = list(string)
 }
 
-variable "spn" {
-  type = object({
-    create_spn                   = optional(bool, true)
-    app_role_assignment_required = optional(bool, false)
-  })
-  default = {
-    create_spn                   = true
-    app_role_assignment_required = false
-  }
+variable "create_spn" {
+  type    = bool
+  default = true
+}
+
+variable "app_role_assignment_required" {
+  type    = bool
+  default = false
+}
+
+variable "notes" {
+  type = string
 }
 
 variable "api_permissions" {
@@ -116,6 +119,22 @@ variable "sso" {
       }), {})
     }), {})
   })
+
+  validation {
+    condition = (
+      try(var.sso.attributes_and_claims.group_claim.source_attribute, null) == null ||
+      contains(lower(
+        [
+          "dnsDomain\\samaccountname",
+           "netbiosdomain\\samaccountname", 
+           "onpremisessecurityidentifier",
+           "samaccountname"
+           ]),
+            try(var.sso.attributes_and_claims.group_claim.source_attribute, null)
+      )
+    )
+    error_message = "Error"
+  }
 }
 
 variable "app_role_assignments" {
